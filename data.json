@@ -1,0 +1,28 @@
+{
+  "Employees": [
+    {
+      "id": 1,
+      "name": "Gagan Deep Singh",
+      "role": "SDE 2",
+      "salary": 50000
+    },
+    {
+      "id": 2,
+      "name": "Vishal Puri",
+      "role": "SDE 2",
+      "salary": 50000
+    },
+    {
+      "id": 3,
+      "name": "Khushboo Pal",
+      "role": "SDE 2",
+      "salary": 50000
+    },
+    {
+      "id": 4,
+      "name": "Naman Mehrotra",
+      "role": "SDE 2",
+      "salary": 50000
+    }
+  ]
+}

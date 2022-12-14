@@ -31,7 +31,6 @@ http
       res.writeHead(200);
       res.end();
     }
-    const reqMethodHeader = req.headers["access-control-request-method"];
     switch (req.url) {
       case "/data":
         switch (req.method) {

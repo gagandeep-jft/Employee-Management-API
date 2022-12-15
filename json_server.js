@@ -1,138 +1,65 @@
-import http from "http";
+import express from "express";
+import cors from "cors";
 import { EmployeesHandler } from "./employees.js";
 
-const empHandler = new EmployeesHandler();
+const app = express();
 const port = 6969;
 
-const getIdFromURL = async (res, url) => {
-  let parts = url.split("/");
-  let id = parts[parts.length - 1];
-  // test if path is alphanumeric
-  if (!/^[a-z0-9]+$/i.test(id)) {
-    await sendData(res, { error: "Not Found!" }, 404);
-  }
-  return id;
-};
+const empHandler = new EmployeesHandler();
 
-const sendData = async (res, jsonData, statusCode = 200) => {
-  res.setHeader("Content-Type", "application/json");
-  res.statusCode = statusCode;
-  res.end(JSON.stringify(await jsonData));
-};
+app.use(cors());
+app.use(express.json());
 
-http
-  .createServer(async (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS"
-    );
-    if (req.method === "OPTIONS") {
-      res.writeHead(200);
-      res.end();
-    }
-    switch (req.url) {
-      case "/data":
-        switch (req.method) {
-          case "GET":
-            handleGET(res);
-            break;
-          case "POST":
-            handlePOST(req, res);
-            break;
-          default:
-            res.writeHead(301, { Location: "/404" });
-            break;
-        }
-        break;
-      case "/404":
-      default:
-        if (req.url.includes("/data")) {
-          switch (req.method) {
-            case "GET":
-              handleGETbyID(req, res);
-              break;
-            case "PUT":
-              handlePUTbyID(req, res);
-              break;
-            case "DELETE":
-              handleDELETEbyID(req, res);
-              break;
-            default:
-              res.writeHead(400, "Bad Request");
-          }
-          break;
-        }
-        sendData(res, { error: "Not Found!" }, 404);
-    }
-  })
-  .listen(port, () => console.log(`Listening to port ${port}`));
+app.listen(port, () => console.log(`Listening to port ${port}`));
 
-const getDatafromRequest = async (req) => {
-  let chunks = [];
-  let data = await new Promise((resolve, reject) => {
-    req.on("data", (chunk) => {
-      chunks.push(chunk);
-    });
-    req.on("end", () => {
-      resolve(Buffer.concat(chunks));
-    });
-  });
-  // console.log(data.toString());
-  return JSON.parse(data.toString());
-};
+app.get("/data", async (req, res) => {
+  res.json(await empHandler.findAll());
+});
 
-const handleGET = async (res) => {
-  await sendData(res, await empHandler.findAll());
-};
-
-const handlePOST = async (req, res) => {
-  let data = await getDatafromRequest(req);
-  let user = await empHandler.addEmployee(data);
-  await sendData(res, user);
-};
-
-const handleGETbyID = async (req, res) => {
-  let userID = await getIdFromURL(res, req.url);
+app.get("/data/:id", async (req, res) => {
+  let userID = req.params.id;
+  console.log(userID);
   let user = await empHandler.findById(userID);
   // console.log(userID);
   if (user) {
     console.log("user found and sent to the client");
-    sendData(res, user);
+    res.send(user);
   } else {
-    sendData(res, { error: "user not found in GET!" }, 404);
+    res.status(404).send({ error: "User not found in GET!" });
   }
-};
+});
 
-const handlePUTbyID = async (req, res) => {
-  let userID = await getIdFromURL(res, req.url);
-  let user = await empHandler.findById(userID);
+app.post("/data", async (req, res) => {
+  res.json(await empHandler.addEmployee(req.body));
+});
+
+app.put("/data/:id", async (req, res) => {
+  let user = await empHandler.findById(req.params.id);
   if (user) {
-    let data = await getDatafromRequest(req);
-    if (data.id == userID) {
+    let data = req.body;
+    if (data.id == req.params.id) {
       let result = await empHandler.updateEmployee(data);
       console.log("user found and updated");
-      sendData(res, result);
+      res.json(result);
     } else {
-      sendData(res, { error: "user not found in PUT!" }, 404);
+      res.status(404).json({ error: "user not found in PUT!" });
     }
   } else {
-    sendData(res, { error: "invalid id in PUT!" }, 404);
+    res.status(404).json({ error: "invalid id in PUT!" });
   }
-};
+});
 
-const handleDELETEbyID = async (req, res) => {
-  let userID = await getIdFromURL(res, req.url);
-  let user = await empHandler.findById(userID);
-  if (user && user.id == userID) {
+app.delete("/data/:id", async (req, res) => {
+  let user = await empHandler.findById(req.params.id);
+  if (user && user.id == req.params.id) {
     let result = await empHandler.removeEmployee(user.id);
     if (result) {
       console.log("user found and deleted!");
-      await sendData(res, { success: result }, 200);
+      res.json({ success: result });
     } else {
-      await sendData(res, { error: "user not found" }, 404);
+      res.status(404).json({ error: "user not found" });
     }
   } else {
-    await sendData(res, { error: "invalid user id" }, 404);
+    res.status(404).json({ error: "invalid user id" });
   }
-};
+});

@@ -53,6 +53,12 @@ export class EmployeesHandler {
     if (!employee.id) {
       employee.id = randomBytes(7).toString("hex");
     }
+
+    if (employees.filter((e) => e.id === employee.id).length != 0) {
+      console.log("User Already Exists!");
+      return {};
+    }
+
     employees.push(employee);
     console.log(employee);
     this.updateData(employees);

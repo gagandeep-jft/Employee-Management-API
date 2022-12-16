@@ -1,0 +1,76 @@
+{% layout "layout.liquid" %}
+
+{% block title %}
+  {{ title }}
+{% endblock %}
+
+{% block main %}
+  <div class="container m-5 p-5 mx-auto">
+    <h1>Login</h1>
+    <form
+      action="/auth"
+      method="POST"
+      id="login-form">
+      <!-- Email input -->
+      <div class="form-outline mb-4">
+        <input
+          type="email"
+          name="email"
+          id="email"
+          class="form-control" />
+        <label class="form-label" for="email">Email address</label>
+      </div>
+
+      <!-- Password input -->
+      <div class="form-outline mb-4">
+        <input
+          type="password"
+          name="password"
+          id="password"
+          class="form-control" />
+        <label class="form-label" for="password">Password</label>
+      </div>
+
+      <p id="form-error-message" class="text-center d-none text-danger">
+        Either email address or password is incorrect
+      </p>
+      <!-- 2 column grid layout for inline styling -->
+      <div class="row mb-4">
+        <div class="col d-flex justify-content-center">
+          <!-- Checkbox -->
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="rememberMe"
+              id="rememberMe"
+              checked />
+            <label class="form-check-label" for="rememberMe">
+              Remember me
+            </label>
+          </div>
+        </div>
+
+        <div class="col">
+          <!-- Simple link -->
+          <a href="#!">Forgot password?</a>
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <button
+        type="submit"
+        id="login-btn"
+        class="btn btn-primary btn-block mb-4">
+        Sign in
+      </button>
+
+      <!-- Register buttons -->
+      <div class="text-center">
+        <p>Not a member?
+          <a href="#!">Register</a>
+        </p>
+      </div>
+    </form>
+  </div>
+{% endblock %}

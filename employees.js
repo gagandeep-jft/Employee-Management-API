@@ -44,21 +44,25 @@ export class EmployeesHandler {
     }
   };
   // alias for getData()
-  findAll = async () => {
-    return await this.getData();
+  findAll = async (empInfo) => {
+    let data = await this.getData();
+    if (empInfo) {
+      return data.filter(
+        (emp) =>
+          emp.name == empInfo.name &&
+          emp.job == empInfo.job &&
+          emp.salary == empInfo.salary
+      );
+    }
+    return data;
   };
 
   addEmployee = async (employee) => {
     let employees = await this.getData();
-    if (!employee.id) {
-      employee.id = randomBytes(7).toString("hex");
-    }
-
-    if (employees.filter((e) => e.id === employee.id).length != 0) {
-      console.log("User Already Exists!");
+    if (employee.id) {
       return {};
     }
-
+    employee.id = randomBytes(7).toString("hex");
     employees.push(employee);
     console.log(employee);
     this.updateData(employees);
@@ -72,10 +76,10 @@ export class EmployeesHandler {
         employees[i] = employee;
         await this.updateData(employees);
         console.log("FOUND and REPLACED!!");
-        break;
+        return employee;
       }
     }
-    return employee;
+    return {};
   };
 
   removeEmployee = async (id) => {

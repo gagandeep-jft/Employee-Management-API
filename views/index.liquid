@@ -1,0 +1,209 @@
+{% layout "layout.liquid" %}
+
+{% block title %}
+  {{ title }}
+{% endblock %}
+
+{% block main %}
+  <div class="container">
+    <div class="navbar-nav">
+      <a
+        href="/logout"
+        id="logout-btn"
+        class="btn btn-link d-block align-self-end">Logout</a>
+    </div>
+    <div class="heading my-5">
+      <h1 class="text-center">{{ title }}</h1>
+    </div>
+    <div class="">
+      <div class="">
+        <form
+          id="emp-form"
+          class="form"
+          method="POST"
+          action="/data">
+          <div class="form-group">
+            <label for="name">Name:
+            </label>
+            <input
+              class="form-control"
+              type="text"
+              id="name"
+              name="name"
+              value="{{employee.name}}"
+              required />
+          </div>
+          <div class="form-group">
+            <label for="job">Job:
+            </label>
+            <input
+              class="form-control"
+              type="text"
+              id="job"
+              name="job"
+              value="{{employee.job}}"
+              required />
+          </div>
+          <div class="form-group">
+            <label for="salary">Salary:
+            </label>
+            <input
+              class="form-control"
+              type="number"
+              id="salary"
+              name="salary"
+              value="{{employee.salary}}"
+              required />
+          </div>
+          {% if err %}
+            <div class="text-center text-danger my-2">{{ err }}</div>
+          {% endif %}
+          <div class="form-group d-flex justify-content-evenly my-3">
+            {% if employee == null %}
+              <button
+                class="btn btn-success"
+                id="add-emp"
+                type="submit">
+                Submit
+              </button>
+              <button
+                class="btn btn-outline-primary"
+                id="search-emp"
+                type="submit"
+                formaction="/data/search"
+                formmethod="POST">
+                🔎 Search
+              </button>
+            {% else %}
+              <button
+                class="btn btn-primary"
+                id="update-emp"
+                type="submit"
+                formaction="/data/update"
+                formmethod="POST">
+                Update
+              </button>
+              <button
+                class="btn btn-outline-primary"
+                id="clear-emp"
+                type="reset"
+                onclick="window.location.replace('/')">
+                ❌ Clear
+              </button>
+            {% endif %}
+
+
+          </div>
+          <input
+            type="hidden"
+            name="empID"
+            value="{{employee.id}}"
+            id="empID" />
+        </form>
+      </div>
+    </div>
+    <hr/>
+    {% if employees.length == 0 %}
+      <p class="text-danger text-center">No records found!</p>
+    {% else %}
+      <div class="datasheet">
+        <table class="table table-hover">
+          <thead>
+            <tr class="">
+              <th scope="col">
+                <div class="theads d-flex justify-content-between p-1">
+                  <p>Name</p>
+                  <div class="button-group">
+                    <button
+                      class="btn btn-dark btn-sort"
+                      name="name"
+                      value="asc"
+                      title="Sort in Ascending Order">
+                      ⏫
+                    </button>
+                    <button
+                      class="btn btn-dark btn-sort"
+                      name="name"
+                      value="desc"
+                      title="Sort in Descending Order">
+                      ⏬
+                    </button>
+                  </div>
+                </div>
+              </th>
+              <th scope="col">
+                <div class="theads d-flex justify-content-between p-1">
+                  <p>Job</p>
+                  <div class="button-group">
+                    <button
+                      class="btn btn-dark btn-sort"
+                      name="job"
+                      value="asc"
+                      title="Sort in Ascending Order">
+                      ⏫
+                    </button>
+                    <button
+                      class="btn btn-dark btn-sort"
+                      name="job"
+                      value="desc"
+                      title="Sort in Descending Order">
+                      ⏬
+                    </button>
+                  </div>
+                </div>
+              </th>
+              <th scope="col">
+                <div class="theads d-flex justify-content-between p-1">
+                  <p>Salary</p>
+                  <div class="button-group">
+                    <button
+                      class="btn btn-dark btn-sort"
+                      name="salary"
+                      value="asc"
+                      title="Sort in Ascending Order">
+                      ⏫
+                    </button>
+                    <button
+                      class="btn btn-dark btn-sort"
+                      name="salary"
+                      value="desc"
+                      title="Sort in Descending Order">
+                      ⏬
+                    </button>
+                  </div>
+                </div>
+              </th>
+              <th scope="col">
+                <div class="theads d-flex justify-content-between p-1">
+                  <p>Action</p>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+
+            {% for emp in employees %}
+              <tr id="{{emp.id}}">
+                <td>{{ emp.name }}</td>
+                <td>{{ emp.job }}</td>
+                <td>{{ emp.salary }}</td>
+                <td class="d-flex">
+                  <form action="/data/get/{{emp.id}}" method="POST">
+                    <button class="edit-btn btn btn-primary mx-2">
+                      Edit
+                    </button>
+                  </form>
+                  <form action="/data/delete/{{emp.id}}" method="POST">
+                    <button class="delete-btn btn btn-danger">
+                      Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

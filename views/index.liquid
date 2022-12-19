@@ -59,7 +59,7 @@
             <div class="text-center text-danger my-2">{{ err }}</div>
           {% endif %}
           <div class="form-group d-flex justify-content-evenly my-3">
-            {% if employee == null %}
+            {% if employee == undefined or employee == null %}
               <button
                 class="btn btn-success"
                 id="add-emp"

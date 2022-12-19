@@ -1,9 +1,9 @@
 {
-  "name": "http_tests",
+  "name": "EmployeesManagement",
   "version": "1.0.0",
-  "main": "getJSON.js",
+  "main": "server.js",
   "scripts": {
-    "start": "nodemon json_server.js",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,6 +17,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "jsonwebtoken": "^8.5.1",
-    "liquidjs": "^10.3.2"
+    "liquidjs": "^10.3.2",
+    "mysql": "^2.18.1"
   }
 }

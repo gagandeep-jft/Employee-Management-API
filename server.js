@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { Liquid } from "liquidjs";
-import { EmployeesHandler } from "./employees.js";
+import { EmployeesHandler } from "./models.js";
 
 const app = express();
 const port = 6969;
@@ -25,7 +25,7 @@ const empHandler = new EmployeesHandler();
 
 const authUserUI = (req, res, next) => {
   const token = req.cookies.token;
-  console.log("Token", token);
+  // console.log("Token", token);
   if (token == null || token == undefined) return res.redirect("/login"); // unauthorized
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
     if (err) {
@@ -33,7 +33,7 @@ const authUserUI = (req, res, next) => {
       return res.status(403).redirect("/login");
     } // forbidden
     req.user = user;
-    console.log("user is legit");
+    // console.log("user is legit");
     next();
   });
 };
@@ -53,14 +53,14 @@ app.get("/", authUserUI, async (req, res) => {
     : await empHandler.findAll();
 
   let employee = req.cookies.searchResult
-    ? employees[0]
-    : empHandler.findById(req.cookies.userID);
+    ? req.cookies.searchResult[0]
+    : await empHandler.findById(req.cookies.userID);
   let err = req.cookies.err;
 
   res.clearCookie("userID");
   res.clearCookie("searchResult");
   res.clearCookie("err");
-  
+  // console.log(employees, employee);
   res.render("index", { title: "Dashboard", employees, employee, err });
 });
 

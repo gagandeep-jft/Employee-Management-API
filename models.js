@@ -1,17 +1,44 @@
-import { promises as fs } from "fs";
+import { Sequelize, Model, DataTypes } from "sequelize";
 import { randomBytes } from "crypto";
 import mysql from "mysql";
 import dotenv from "dotenv";
+import { connect } from "http2";
 
 dotenv.config();
 
-const connection = mysql.createPool({
-  connectionLimit: 10,
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.PASSWORD,
-  database: process.env.DB_NAME,
-});
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    dialect: "mysql",
+  }
+);
+const Employees = sequelize.define(
+  "Employees",
+  {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+    },
+    name: DataTypes.STRING,
+    job: DataTypes.STRING,
+    salary: DataTypes.NUMBER,
+  },
+  {
+    timestamps: false,
+  }
+);
+
+sequelize
+  .authenticate()
+  .then(async () => {
+    console.log("Connection has been established successfully.");
+  })
+  .catch((error) => {
+    console.error("Unable to connect to the database: ", error);
+  });
 
 export class EmployeesHandler {
   constructor(id, name, job, salary) {
@@ -29,77 +56,49 @@ export class EmployeesHandler {
   };
 
   getData = async () => {
-    return await new Promise((resolve) => {
-      connection.query(`SELECT * FROM Employees`, (err, result, fields) => {
-        if (err) {
-          console.log(err);
-          throw err;
-        }
-        resolve(this.toObject(result));
-      });
-    });
+    return this.toObject(
+      await Employees.findAll()
+    );
   };
 
   findById = async (id) => {
-    return await new Promise((resolve, reject) => {
-      connection.query(
-        "SELECT * FROM Employees WHERE id=?",
-        [id],
-        (err, result, fields) => {
-          if (err) {
-            console.log(err);
-            reject(err);
-          }
-          // console.log(this.toObject(employee));
-          result = this.toObject(result);
-          resolve(result.length > 0 ? result[0] : undefined);
-        }
-      );
-    });
+    if (id == undefined || id == null) return undefined;
+    // console.log(id);
+    let result = await this.toObject(await Employees.findOne({ where: { id } }));
+    if (result) {
+      return result;
+    }
   };
 
   // alias for getData()
   findAll = async (empInfo) => {
     // let data = await this.getData();
     if (empInfo) {
-      return await new Promise((resolve, reject) => {
-        connection.query(
-          "SELECT * FROM Employees WHERE name=? AND job=? AND salary=?",
-          [empInfo.name, empInfo.job, empInfo.salary],
-          (err, result, fields) => {
-            if (err) {
-              console.log(err);
-              reject(err);
-            }
-            // console.log(this.toObject(result));
-            resolve(this.toObject(result));
-          }
-        );
-      });
+      delete empInfo.id;
+      // console.log(empInfo);
+      let result = this.toObject(
+        await Employees.findOne({
+          where: empInfo,
+        })
+      );
+      if (result != null) {
+        return result;
+      }
+      return {};
     }
-    return await this.getData();
+    return this.getData();
   };
 
   addEmployee = async (employee) => {
     if (employee.id) {
       return {};
     }
-
-    return await new Promise((resolve, reject) => {
-      employee.id = randomBytes(7).toString("hex");
-      connection.query(
-        "INSERT INTO Employees (id, name, job, salary) VALUES (?, ?, ?, ?)",
-        [employee.id, employee.name, employee.job, employee.salary],
-        (err, result, fields) => {
-          if (err) {
-            console.log(err);
-            reject({});
-            throw err;
-          }
-          resolve(this.toObject(employee));
-        }
-      );
-    });
+    employee.id = randomBytes(10).toString("hex");
+    let result = await Employees.create(employee);
+    if (result.id == employee.id) {
+      return employee;
+    }
+    return {};
   };
 
   updateEmployee = async (employee) => {
@@ -107,79 +106,57 @@ export class EmployeesHandler {
       return {};
     }
 
-    return await new Promise((resolve, reject) => {
-      connection.query(
-        "UPDATE Employees SET name=?, job=?, salary=? WHERE id=?",
-        [employee.name, employee.job, employee.salary, employee.id],
-        (err, result, fields) => {
-          if (err) {
-            console.log(err);
-            reject(err);
-            throw err;
-          }
-          // console.log(this.toObject(result));
-          if (result.changedRows == 0) {
-            return resolve({});
-          }
-          resolve(employee);
-        }
-      );
-    });
+    return (await Employees.update(employee, { where: { id: employee.id } }))[0] == 1;
   };
 
   removeEmployee = async (id) => {
-    return await new Promise((resolve, reject) => {
-      connection.query(
-        "DELETE FROM Employees WHERE id=?",
-        id,
-        (err, result, fields) => {
-          if (err) {
-            console.log(err);
-            reject(false);
-          }
-          // console.log(this.toObject(result));
-          resolve(this.toObject(result).affectedRows == 1);
-        }
-      );
-    });
+    return (await Employees.destroy({ where: { id } })) == 1;
   };
 }
 
-// const emp = new EmployeesHandler();
+/*
 // console.log(
-//   "Adding employee=>",
+  //   "Adding employee=>",
 //   await emp.addEmployee({
-//     name: "Gagan Deep Singh",
-//     job: "SDE",
-//     salary: 50000,
-//   })
-// );
+  //     name: "Garima",
+  //     job: "SDE",
+  //     salary: 50000,
+  //   })
+  // );
+  let obj = {};
+  
+  console.log("Adding employee=>", obj = await emp.addEmployee({
+    "name": "Vishal Puri",
+    "job": "SDE",
+    "salary": 50000
+  }));
+  
+  // obj.id = "ef8a76fb35ffa3c03d87";
+  
+  console.log(
+    "Updating employee=>",
+    await emp.updateEmployee({
+      name: "Vishal",
+      job: "SDE",
+      salary: 50000,
+      id: obj.id,
+    })
+    );
 
-// console.log("Adding employee=>", await emp.addEmployee({
-//   "name": "Vishal Puri",
-//   "job": "SDE",
-//   "salary": 50000
-// }));
+console.log(
+  "Find Employee by fields =>",
+  await emp.findAll({
+    name: obj.name,
+    job: obj.job,
+    salary: obj.salary,
+  })
+);
 
-// console.log(
-//   "Updating employee=>",
-//   await emp.updateEmployee({
-//     name: "Gagan Gulyani",
-//     job: "SDE",
-//     salary: 50000,
-//     id: "f9bed5ad94942a",
-//   })
-// );
 
-// console.log(
-//   "Find Employee by fields =>", await emp.findAll({
-//     name: "Gagan Gulyani",
-//     job: "SDE",
-//     salary: 500000,
-//   })
-// );
-
-// console.log("Find By ID=>", await emp.findById(""));
-// console.log("Removing employee=>", await emp.removeEmployee())
-// console.log(await emp.getData());
+// console.log("Find By ID=>", await emp.findById("0d0aa63c763562da965a"));
+console.log("Removing employee=>", await emp.removeEmployee(obj.id));
+console.log(await emp.getData());
 // connection.end();
+// */
+// const emp = new EmployeesHandler();
+// console.log(await emp.getData());

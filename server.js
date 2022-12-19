@@ -123,13 +123,17 @@ app.post("/data/get/:id", authUserUI, async (req, res) => {
     res.cookie("userID", user.id);
     return res.redirect("/");
   }
+  console.log(user);
   res.sendStatus(404);
 });
 
 // add employee
 app.post("/data", authUserUI, async (req, res) => {
-  console.log(req.body);
-  let result = await empHandler.addEmployee(req.body);
+  let result = await empHandler.addEmployee({
+    name: req.body.name,
+    job: req.body.job,
+    salary: req.body.salary,
+  });
   if (Object.keys(result).length == 0) {
     res.sendStatus(400);
   }
@@ -145,7 +149,7 @@ app.post("/data/update", authUserUI, async (req, res) => {
     delete data.empID;
     data.id = user.id;
     let result = await empHandler.updateEmployee(data);
-    if (Object.keys(result).length == 0) {
+    if (!result) {
       return res.sendStatus(404);
     }
     console.log("user found and updated");

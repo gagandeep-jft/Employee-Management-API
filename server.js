@@ -48,18 +48,23 @@ const isUser = async (userInfo) => {
 };
 
 app.get("/", authUserUI, async (req, res) => {
-  let employees = req.cookies.searchResult
-    ? req.cookies.searchResult
-    : await empHandler.findAll();
+  let employee;
+  let employees;
 
-  let employee = req.cookies.searchResult
-    ? req.cookies.searchResult[0]
-    : await empHandler.findById(req.cookies.userID);
+  if (req.cookies.searchResult) {
+    employees = JSON.parse(JSON.stringify(req.cookies.searchResult));
+    employee = req.cookies.searchResult[0];
+  } else {
+    employees = await empHandler.findAll();
+    employee = await empHandler.findById(req.cookies.userID);
+  }
+
   let err = req.cookies.err;
 
   res.clearCookie("userID");
   res.clearCookie("searchResult");
   res.clearCookie("err");
+
   // console.log(employees, employee);
   res.render("index", { title: "Dashboard", employees, employee, err });
 });
@@ -105,7 +110,7 @@ app.post("/data/search", authUserUI, async (req, res) => {
     return res.redirect("/");
   }
   let result = await empHandler.findAll({ name, job, salary });
-  if (!result) res.cookie("err", "User not found!");
+  if (Object.keys(result).length == 0) res.cookie("err", "User not found!");
   else {
     res.cookie("searchResult", result);
   }
@@ -119,11 +124,10 @@ app.post("/data/get/:id", authUserUI, async (req, res) => {
   let user = await empHandler.findById(userID);
   // console.log(userID);
   if (user) {
-    console.log("user found and sent to the client");
-    res.cookie("userID", user.id);
+    console.log("user found and sent to the client with id:", user._id);
+    res.cookie("userID", user._id);
     return res.redirect("/");
   }
-  console.log(user);
   res.sendStatus(404);
 });
 
@@ -147,28 +151,32 @@ app.post("/data/update", authUserUI, async (req, res) => {
   let user = await empHandler.findById(req.body.empID);
   if (user) {
     delete data.empID;
-    data.id = user.id;
+    data._id = user._id;
     let result = await empHandler.updateEmployee(data);
     if (!result) {
-      return res.sendStatus(404);
+      res.cookie("err", "user not found!");
+      return res.redirect("/");
     }
     console.log("user found and updated");
-    return res.redirect("/");
+  } else {
+    res.cookie("err", "user not found!");
   }
-  return res.sendStatus(404);
+  return res.redirect("/");
 });
 
 app.post("/data/delete/:id", authUserUI, async (req, res) => {
   let user = await empHandler.findById(req.params.id);
-  if (user && user.id == req.params.id) {
-    let result = await empHandler.removeEmployee(user.id);
+  if (user && user._id == req.params.id) {
+    let result = await empHandler.removeEmployee(user._id.toString());
     if (result) {
       console.log("user found and deleted!");
       return res.redirect("/");
     }
   }
-  res.cookie("err", "invalid user id");
   return res.status(404).redirect("/");
 });
 
+app.post("/data/sort/:field/:sortBy", authUserUI, async(req, res)=>{
+
+});
 app.listen(port, () => console.log(`Listening to port ${port}`));

@@ -97,7 +97,7 @@
           <input
             type="hidden"
             name="empID"
-            value="{{employee.id}}"
+            value="{{employee._id}}"
             id="empID" />
         </form>
       </div>
@@ -183,17 +183,17 @@
           <tbody>
 
             {% for emp in employees %}
-              <tr id="{{emp.id}}">
+              <tr id="{{emp._id}}">
                 <td>{{ emp.name }}</td>
                 <td>{{ emp.job }}</td>
                 <td>{{ emp.salary }}</td>
                 <td class="d-flex">
-                  <form action="/data/get/{{emp.id}}" method="POST">
+                  <form action="/data/get/{{emp._id}}" method="POST">
                     <button class="edit-btn btn btn-primary mx-2">
                       Edit
                     </button>
                   </form>
-                  <form action="/data/delete/{{emp.id}}" method="POST">
+                  <form action="/data/delete/{{emp._id}}" method="POST">
                     <button class="delete-btn btn btn-danger">
                       Delete
                     </button>
